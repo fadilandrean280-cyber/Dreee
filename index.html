@@ -1,0 +1,35 @@
+// Select all the parent containers for each title block
+const elements = document.querySelectorAll('div.flex.group');
+
+const seen = new Set();
+
+const rows = Array.from(elements).map(element => {
+    const title = element.querySelector('h3 a span')?.textContent.trim();
+    if (!title || seen.has(title)) {
+        return null; // skip empties or duplicates
+    }
+    seen.add(title);
+
+    // URL
+    const href = element.querySelector('h3 a')?.getAttribute('href');
+    const url = href ? `https://bato.to${href}` : "";
+
+    // Tags (inside "flex flex-wrap text-xs opacity-70")
+    const tagsContainer = element.querySelector('.flex.flex-wrap.text-xs.opacity-70');
+    const tags = tagsContainer
+        ? Array.from(tagsContainer.querySelectorAll('span.font-bold, span:not(:has(span))'))
+            .map(s => s.textContent.trim())
+            .filter(t => t && t !== ',')
+            .join(", ")
+        : "";
+
+    // Escape CSV fields
+    const esc = str => `"${(str || "").replace(/"/g, '""')}"`;
+
+    return `${esc(title)},${esc("")},${esc(url)},${esc(tags)}`;
+}).filter(Boolean);
+
+// Add CSV header
+const csv = ["Title,Author,URL,Tags", ...rows].join("\n");
+
+console.log(csv);
